@@ -21,7 +21,7 @@ class DefaultController extends Controller
         $results = array();
         foreach ($urls as $url){
             $data = $this->get_data($url);
-            $results[] = array("url"=>$url,"data"=>utf8_encode($data));
+            $results[] = array("url"=>$url,"data"=>mb_convert_encoding($data, "UTF-8", "auto"));
         }
         $response["results"] = $results;
         $res =  new JsonResponse($response);
@@ -40,4 +40,5 @@ class DefaultController extends Controller
         curl_close($ch);
         return $data;
     }
+
 }
