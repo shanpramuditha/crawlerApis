@@ -48,6 +48,17 @@ class DefaultController extends Controller
      */
     public function getUrlAction(Request $request)
     {
+
+        // {"url":"https://www.ebay.com/sch/Watches-Parts-Accessories/14324/i.html?_pgn=4&_skc=150",
+        // "class":".vip", // Enter the class/classes with dot(.) which your product links have (if available)
+        // "pgType":"q",   // Enter the pagination type either p:end of the Path(https://www.ebay.com/any/path/4) or q:with query(https://www.ebay.com/any/path?page=4)
+        // "minPg":"3",    // Enter the start page number you have to scrape
+        // "maxPg":"5",    // Enter the last page number you have to scrape
+        // "qKey":"page"}  // Enter the query key of the url (if "pgType":"q") for pagination (for https://www.ebay.com/any/path?page=4 is "page")
+
+        // Example Input
+        // {"url":"https://www.ebay.com/sch/Watches-Parts-Accessories/14324/i.html?_pgn=4&_skc=150", "class":".vip", "pgType":"q", "minPg":"3", "maxPg":"5", "qKey":"_pgn"}
+
         $content = $request->getContent();
         $content = json_decode($content,true);
 
@@ -62,15 +73,27 @@ class DefaultController extends Controller
         $minPg = $content['minPg'];
         $maxPg = $content['maxPg'];
 
+        $linksPgArr = array();
+
         if ($pgType=='p'){
 
+            // for the urls which pagination index includes in the path of the url
+
+            foreach (range($minPg,$maxPg) as $pageNum){
+
+                $_url = $scheme.'://'.$host.substr( $path, 0, strrpos( $path, '/' ) + 1).$pageNum;
+
+                $linksArr = $this->getLinks($_url, $cls);
+                $linksPgArr = array_merge($linksPgArr,$linksArr);
+            }
         }
 
         elseif ($pgType=='q'){
 
+            // for the urls which pagination index includes in the query of the url
+
             $qKey = $content['qKey'];
 
-            $linksPgArr = array();
             foreach (range($minPg,$maxPg) as $pageNum){
 
                 parse_str($query, $qs);
@@ -91,6 +114,7 @@ class DefaultController extends Controller
     }
 
     private function getLinks($_url, $cls){
+
         $client = new Client();
         $crawler = $client->request('GET', $_url);
         $links = $crawler->filter('a'.$cls)->links();
