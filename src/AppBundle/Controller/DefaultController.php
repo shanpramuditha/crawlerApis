@@ -63,52 +63,23 @@ class DefaultController extends Controller
         $content = json_decode($content,true);
 
         $url = $content['url'];
-        $scheme = parse_url($url, PHP_URL_SCHEME);
-        $host = parse_url($url, PHP_URL_HOST);
-        $path = parse_url($url, PHP_URL_PATH);
-        $query = parse_url($url, PHP_URL_QUERY);
-
         $cls = $content['class'];
-        $pgType = $content['pgType'];
         $minPg = $content['minPg'];
         $maxPg = $content['maxPg'];
 
         $linksPgArr = array();
 
-        if ($pgType=='p'){
+        foreach (range($minPg,$maxPg) as $pageNum) {
 
-            // for the urls which pagination index includes in the path of the url
+            $_url = str_replace('$$',$pageNum,$url);
 
-            foreach (range($minPg,$maxPg) as $pageNum){
-
-                $_url = $scheme.'://'.$host.substr( $path, 0, strrpos( $path, '/' ) + 1).$pageNum;
-
-                $linksArr = $this->getLinks($_url, $cls);
-                $linksPgArr = array_merge($linksPgArr,$linksArr);
-            }
+            $linksArr = $this->getLinks($_url, $cls);
+            $linksPgArr = array_merge($linksPgArr, $linksArr);
         }
 
-        elseif ($pgType=='q'){
+//        $linksPgUArr = array_unique($linksPgArr);
 
-            // for the urls which pagination index includes in the query of the url
-
-            $qKey = $content['qKey'];
-
-            foreach (range($minPg,$maxPg) as $pageNum){
-
-                parse_str($query, $qs);
-                $qs[$qKey] = $pageNum;
-
-                $_url = $scheme.'://'.$host.$path.'?'.http_build_query($qs);
-
-                $linksArr = $this->getLinks($_url, $cls);
-                $linksPgArr = array_merge($linksPgArr,$linksArr);
-            }
-        }
-
-        $linksPgUArr = array_unique($linksPgArr);
-
-        $res =  new JsonResponse($linksPgUArr);
+        $res =  new JsonResponse($linksPgArr);
         $res->headers->set('Content-Type', 'application/json');
         return $res;
     }
