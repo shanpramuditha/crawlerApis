@@ -48,17 +48,6 @@ class DefaultController extends Controller
      */
     public function getUrlAction(Request $request)
     {
-
-        // {"url":"https://www.ebay.com/sch/Watches-Parts-Accessories/14324/i.html?_pgn=4&_skc=150",
-        // "class":".vip", // Enter the class/classes with dot(.) which your product links have (if available)
-        // "pgType":"q",   // Enter the pagination type either p:end of the Path(https://www.ebay.com/any/path/4) or q:with query(https://www.ebay.com/any/path?page=4)
-        // "minPg":"3",    // Enter the start page number you have to scrape
-        // "maxPg":"5",    // Enter the last page number you have to scrape
-        // "qKey":"page"}  // Enter the query key of the url (if "pgType":"q") for pagination (for https://www.ebay.com/any/path?page=4 is "page")
-
-        // Example Input
-        // {"url":"https://www.ebay.com/sch/Watches-Parts-Accessories/14324/i.html?_pgn=4&_skc=150", "class":".vip", "pgType":"q", "minPg":"3", "maxPg":"5", "qKey":"_pgn"}
-
         $content = $request->getContent();
         $content = json_decode($content,true);
 
@@ -96,6 +85,39 @@ class DefaultController extends Controller
             if (parse_url($_url, PHP_URL_HOST) == parse_url($link, PHP_URL_HOST)){
                 array_push($linksArr, $link);
             }
+        }
+
+        return $linksArr;
+    }
+
+    /**
+     * @Route("/getLinks", name="getLinks" )
+     */
+    public function getLinksAction(Request $request)
+    {
+        $content = $request->getContent();
+        $content = json_decode($content,true);
+
+        $url = $content['url'];
+
+        $linksArr = $this->getXMLLinks($url);
+
+//        $linksPgUArr = array_unique($linksPgArr);
+
+        $res =  new JsonResponse($linksArr);
+        $res->headers->set('Content-Type', 'application/json');
+        return $res;
+    }
+
+    private function getXMLLinks($url){
+
+        $linksArr = array();
+
+        $xml = simplexml_load_file($url);
+
+        foreach ($xml->sitemap as $map) {
+            $loc = $map->loc;
+            array_push($linksArr, $loc[0]);
         }
 
         return $linksArr;
