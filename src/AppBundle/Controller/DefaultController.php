@@ -117,7 +117,7 @@ class DefaultController extends Controller
 
         foreach ($xml->sitemap as $map) {
             $loc = $map->loc;
-            array_push($linksArr, $loc[0]);
+            array_push($linksArr, json_decode(json_encode($loc),true)[0]);
         }
 
         return $linksArr;
