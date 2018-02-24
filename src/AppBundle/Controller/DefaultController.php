@@ -8,27 +8,39 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 
 use Goutte\Client;
+use Symfony\Component\HttpFoundation\Response;
 
 class DefaultController extends Controller
 {
+
     /**
-     * @Route("/html", name="htmlApi")
+     * @Route("/",name="homepage")
      */
-    public function indexAction(Request $request)
+    public function homepageAction(Request $request){
+       return $this->render('index.html.twig');
+    }
+
+    /**
+     * @Route("/download-json", name="download_json")
+     */
+    public function downloadJson(Request $request){
+        $json = json_encode( array( 'test' => 'test' ));
+
+        header('Content-disposition: attachment; filename=jsonFile.json');
+        header('Content-type: application/json');
+    }
+
+    public function indexAction($urls,$fileName)
     {
-        $content = $request->getContent();//get json data
-        $content = json_decode($content,true);
-        $urls = $content['urls'];
-        $response = array();
         $results = array();
         foreach ($urls as $url){
             $data = $this->get_data($url);
             $results[] = array("url"=>$url,"data"=>mb_convert_encoding($data, "UTF-8", "auto"));
         }
-        $response["results"] = $results;
-        $res =  new JsonResponse($response);
-        $res->headers->set('Content-Type', 'application/json');
-        return $res;
+
+        header('Content-disposition: attachment; filename='.$fileName.'.json');
+        header('Content-type: application/json');
+        echo json_encode($results);
 
     }
 
@@ -95,18 +107,16 @@ class DefaultController extends Controller
      */
     public function getLinksAction(Request $request)
     {
-        $content = $request->getContent();
-        $content = json_decode($content,true);
-
-        $url = $content['url'];
-
+        $url = $request->get('url');
+        $filename = $request->get('filename');
+        $from = (int)$request->get('from');
+        $to = (int)$request->get('to');
         $linksArr = $this->getXMLLinks($url);
+        $linksArr = array_slice($linksArr,$from,($to-$from));
 
-//        $linksPgUArr = array_unique($linksPgArr);
+        $this->indexAction($linksArr,$filename.' | '.(string)$from.'-'.(string)$to);
 
-        $res =  new JsonResponse($linksArr);
-        $res->headers->set('Content-Type', 'application/json');
-        return $res;
+        return new Response('done');
     }
 
     private function getXMLLinks($url){
@@ -121,5 +131,22 @@ class DefaultController extends Controller
         }
 
         return $linksArr;
+    }
+
+    /**
+     * @Route("/getXmlCount", name="get_xml_count")
+     */
+    public function getXmlCount(Request $request){
+        $url = $request->get('url');
+        $linksArr = array();
+
+        $xml = simplexml_load_file($url);
+
+        foreach ($xml->sitemap as $map) {
+            $loc = $map->loc;
+            array_push($linksArr, json_decode(json_encode($loc),true)[0]);
+        }
+
+        return new Response(count($linksArr));
     }
 }

@@ -1,0 +1,39 @@
+{% extends 'base.html.twig' %}
+{% block body %}
+    <div class="container">
+        <h3>Download json from products.xml</h3>
+        <form action="{{ url('getLinks') }}" method="post">
+            <input class="form-control" name="url" id="url" placeholder="url for products.xml">
+            <input class="form-control" name="filename" id="filem" placeholder="name for the json file">
+            <div class="col-md-3">
+                <input type="number" class="form-control" name="from" placeholder="from">
+            </div>
+            <div class="col-md-3">
+                <input type="number" class="form-control" name="to" placeholder="to">
+            </div>
+            <button disabled class="btn btn-info" id="submit" type="submit">Download json</button>
+        </form>
+        <h5 id="url_count"></h5>
+
+    </div>
+
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        $('#url').change(function (url) {
+            console.log(url)
+            $('#submit').attr('disabled' , true);
+            $.ajax({
+                method:"GET",
+                url:'{{ url('get_xml_count') }}',
+                data:{url:$(this).val()},
+                success:function (data) {
+                    $('#url_count').html(data+' urls found')
+                    $('#submit').attr('disabled' , false);
+                }
+            })
+        })
+    </script>
+{% endblock %}
