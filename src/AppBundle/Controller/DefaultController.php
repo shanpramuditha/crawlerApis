@@ -12,7 +12,6 @@ use Symfony\Component\HttpFoundation\Response;
 
 class DefaultController extends Controller
 {
-
     /**
      * @Route("/",name="homepage")
      */
@@ -20,19 +19,10 @@ class DefaultController extends Controller
        return $this->render('index.html.twig');
     }
 
-    /**
-     * @Route("/download-json", name="download_json")
-     */
-    public function downloadJson(Request $request){
-        $json = json_encode( array( 'test' => 'test' ));
-
-        header('Content-disposition: attachment; filename=jsonFile.json');
-        header('Content-type: application/json');
-    }
-
     public function indexAction($urls,$fileName)
     {
         $results = array();
+
         foreach ($urls as $url){
             $data = $this->get_data($url);
             $results[] = array("url"=>$url,"data"=>mb_convert_encoding($data, "UTF-8", "auto"));
@@ -60,13 +50,12 @@ class DefaultController extends Controller
      */
     public function getUrlAction(Request $request)
     {
-        $content = $request->getContent();
-        $content = json_decode($content,true);
-
-        $url = $content['url'];
-        $cls = $content['class'];
-        $minPg = $content['minPg'];
-        $maxPg = $content['maxPg'];
+        $url = $request->get('url');
+        $cls = $request->get('cls');
+        $minPg = (int)$request->get('from');
+        $maxPg = (int)$request->get('to');
+        $fileName = $request->get('filename');
+        $fileName = $fileName.'-'.(string)$minPg.'-'.(string)$maxPg;
 
         $linksPgArr = array();
 
@@ -80,9 +69,11 @@ class DefaultController extends Controller
 
 //        $linksPgUArr = array_unique($linksPgArr);
 
-        $res =  new JsonResponse($linksPgArr);
-        $res->headers->set('Content-Type', 'application/json');
-        return $res;
+        header('Content-disposition: attachment; filename='.$fileName.'.json');
+        header('Content-type: application/json');
+        echo json_encode($linksPgArr);
+
+        return new Response('done');
     }
 
     private function getLinks($_url, $cls){
@@ -127,7 +118,8 @@ class DefaultController extends Controller
 
         foreach ($xml->sitemap as $map) {
             $loc = $map->loc;
-            array_push($linksArr, json_decode(json_encode($loc),true)[0]);
+            $loc = json_decode(json_encode($loc),true);
+            array_push($linksArr, $loc[0]);
         }
 
         return $linksArr;
@@ -144,9 +136,33 @@ class DefaultController extends Controller
 
         foreach ($xml->sitemap as $map) {
             $loc = $map->loc;
-            array_push($linksArr, json_decode(json_encode($loc),true)[0]);
+            $loc = json_decode(json_encode($loc),true);
+            array_push($linksArr, $loc[0]);
         }
 
         return new Response(count($linksArr));
+    }
+
+    /**
+     * @Route("/getUrlCount", name="get_url_count")
+     */
+    public function getUrlCount(Request $request){
+
+        $url = $request->get('url');
+        $cls = $request->get('cls');
+        $minPg = (int)$request->get('from');
+        $maxPg = (int)$request->get('to');
+
+        $linksPgArr = array();
+
+        foreach (range($minPg,$maxPg) as $pageNum) {
+
+            $_url = str_replace('$$',$pageNum,$url);
+
+            $linksArr = $this->getLinks($_url, $cls);
+            $linksPgArr = array_merge($linksPgArr, $linksArr);
+        }
+
+        return new Response(count($linksPgArr));
     }
 }

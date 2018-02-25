@@ -1,19 +1,51 @@
 {% extends 'base.html.twig' %}
+
 {% block body %}
+
     <div class="container">
-        <h3>Download json from products.xml</h3>
+
+        <br><br>
+
+        <div class="row">
+
+        <div class="col-xs-12 col-sm-6 col-md-6">
+        <h3>Download Json from products.xml</h3>
         <form action="{{ url('getLinks') }}" method="post">
-            <input class="form-control" name="url" id="url" placeholder="url for products.xml">
-            <input class="form-control" name="filename" id="filem" placeholder="name for the json file">
-            <div class="col-md-3">
+            <input class="form-control" name="url" id="url1" placeholder="url for products.xml">
+            <input class="form-control" name="filename" id="flname1" placeholder="name for the json file">
+            <div class="row">
+            <div class="col-xs-6 col-sm-6 col-md-6">
                 <input type="number" class="form-control" name="from" placeholder="from">
             </div>
-            <div class="col-md-3">
+            <div class="col-xs-6 col-sm-6 col-md-6">
                 <input type="number" class="form-control" name="to" placeholder="to">
             </div>
-            <button disabled class="btn btn-info" id="submit" type="submit">Download json</button>
+            </div>
+            <button disabled class="btn btn-info" id="submit1" type="submit">Download Json</button>
         </form>
-        <h5 id="url_count"></h5>
+        <h5 id="url_count1"></h5>
+        </div>
+
+        <div class="col-xs-12 col-sm-6 col-md-6">
+        <h3>Download Json from Webpage</h3>
+        <form action="{{ url('getUrls') }}" method="post">
+            <input class="form-control" name="url" id="url2" placeholder="url for webpage">
+            <input class="form-control" name="cls" id="cls" placeholder="class of products">
+            <input class="form-control" name="filename" id="flname2" placeholder="name for the json file">
+            <div class="row">
+            <div class="col-xs-6 col-sm-6 col-md-6">
+                <input type="number" class="form-control" id="minPg" name="from" placeholder="from">
+            </div>
+            <div class="col-xs-6 col-sm-6 col-md-6">
+                <input type="number" class="form-control" id="maxPg" name="to" placeholder="to">
+            </div>
+            </div>
+            <button disabled class="btn btn-info" id="submit2" type="submit">Download json</button>
+        </form>
+        <h5 id="url_count2"></h5>
+        </div>
+
+        </div>
 
     </div>
 
@@ -22,16 +54,31 @@
 {% block javascripts %}
     {{ parent() }}
     <script>
-        $('#url').change(function (url) {
+        $('#url1').change(function (url) {
             console.log(url)
-            $('#submit').attr('disabled' , true);
+            $('#submit1').attr('disabled' , true);
             $.ajax({
                 method:"GET",
                 url:'{{ url('get_xml_count') }}',
                 data:{url:$(this).val()},
                 success:function (data) {
-                    $('#url_count').html(data+' urls found')
-                    $('#submit').attr('disabled' , false);
+                    $('#url_count1').html(data+' urls found')
+                    $('#submit1').attr('disabled' , false);
+                }
+            })
+        })
+    </script>
+    <script>
+        $('#maxPg').change(function (to) {
+            console.log(to)
+            $('#submit2').attr('disabled' , true);
+            $.ajax({
+                method:"GET",
+                url:'{{ url('get_url_count') }}',
+                data:{url:$('#url2').val(), cls:$('#cls').val(), from:$('#minPg').val(), to:$(this).val()},
+                success:function (data) {
+                    $('#url_count2').html(data+' urls found')
+                    $('#submit2').attr('disabled' , false);
                 }
             })
         })
