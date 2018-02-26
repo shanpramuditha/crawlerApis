@@ -35,6 +35,7 @@ class DefaultController extends Controller
     }
 
     function get_data($url) {
+
         $ch = curl_init();
         $timeout = 5;
         curl_setopt($ch, CURLOPT_URL, $url);
