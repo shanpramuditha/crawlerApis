@@ -117,10 +117,8 @@ class DefaultController extends Controller
 
         $xml = simplexml_load_file($url);
 
-        foreach ($xml->sitemap as $map) {
-            $loc = $map->loc;
-            $loc = json_decode(json_encode($loc),true);
-            array_push($linksArr, $loc[0]);
+        foreach ($xml->children() as $loc){
+            array_push($linksArr, $loc->loc);
         }
 
         return $linksArr;
@@ -130,17 +128,17 @@ class DefaultController extends Controller
      * @Route("/getXmlCount", name="get_xml_count")
      */
     public function getXmlCount(Request $request){
+
         $url = $request->get('url');
+
         $linksArr = array();
 
         $xml = simplexml_load_file($url);
 
-        foreach ($xml->sitemap as $map) {
-            $loc = $map->loc;
-            $loc = json_decode(json_encode($loc),true);
-            array_push($linksArr, $loc[0]);
+        foreach ($xml->children() as $loc){
+            array_push($linksArr, $loc->loc);
         }
-
+        
         return new Response(count($linksArr));
     }
 
