@@ -31,18 +31,10 @@ class DefaultController extends Controller
         header('Content-disposition: attachment; filename='.$fileName.'.json');
         header('Content-type: application/json');
         echo json_encode($results);
-
     }
 
     function get_data($url) {
-
-        $ch = curl_init();
-        $timeout = 5;
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $timeout);
-        $data = curl_exec($ch);
-        curl_close($ch);
+        $data = file_get_contents($url);
         return $data;
     }
 
@@ -118,7 +110,7 @@ class DefaultController extends Controller
         $xml = simplexml_load_file($url);
 
         foreach ($xml->children() as $loc){
-            array_push($linksArr, $loc->loc);
+            array_push($linksArr, (string) $loc->loc);
         }
 
         return $linksArr;
@@ -136,9 +128,9 @@ class DefaultController extends Controller
         $xml = simplexml_load_file($url);
 
         foreach ($xml->children() as $loc){
-            array_push($linksArr, $loc->loc);
+            array_push($linksArr, (string) $loc->loc);
         }
-        
+
         return new Response(count($linksArr));
     }
 
